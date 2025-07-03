@@ -7,6 +7,10 @@
 
 using namespace std;
 
+// global variable for current date -> regardless the day comparison
+static int currentYear = 2025; 
+static int currentMonth = 7; 
+
 // Product as the Base Class
 class Product {
 protected:
@@ -44,12 +48,12 @@ public:
         : Product(n, p, q), expiryDate(exp), weight(w) {}
 
     bool isExpired() const override {
-        time_t now = time(nullptr);
-        tm* current = localtime(&now);
-        if (!current) return false;
+        int expiryYear = expiryDate.tm_year + 1900;  
+        int expiryMonth = expiryDate.tm_mon + 1;  
         
-        tm expiry_copy = expiryDate; 
-        return mktime(current) > mktime(&expiry_copy);
+        if (currentYear > expiryYear) return true;  
+        if (currentYear == expiryYear && currentMonth > expiryMonth) return true;  
+        return false;  
 }
 
     bool isShippable() const override { return weight > 0; } 
@@ -184,7 +188,7 @@ void checkout(Customer& customer, Cart& cart) {
 }
 
 // helper function to Create tm
-tm createDate(int year , int month , int day) {
+tm createDate(int year , int month , int day = 1) {
     tm t = {};
     t.tm_year = year - 1900;
     t.tm_mon = month - 1;
