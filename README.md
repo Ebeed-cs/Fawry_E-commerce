@@ -1,69 +1,212 @@
-# E-Commerce System
+# E-Commerce System 🛒
 
-A C++ implementation of an e-commerce shopping cart system that handles different product types with expiration dates and shipping requirements.
+A comprehensive C++ implementation of an e-commerce shopping cart system featuring inheritance-based product management, expiration handling, and shipping calculations.
 
-## 🚀 Overview
+## 🚀 Key Features
 
-This project implements a comprehensive e-commerce system featuring:
-- Product management with inheritance-based design
-- Shopping cart functionality
-- Checkout process with payment handling
-- Shipping service integration
-- Error handling for various edge cases
+- **Product Management** - Base class with specialized product types (Perishable, Shippable, Digital)
+- **Smart Cart System** - Inventory validation and quantity management
+- **Checkout Process** - Payment processing with shipping calculations
+- **Error Handling** - Comprehensive validation for edge cases
+- **Memory Management** - Proper cleanup with no memory leaks
 
-## 🏗️ System Architecture
+## 🏗️ Architecture Overview
 
 ### Core Classes
+- **`Product`** - Base class with name, price, quantity
+- **`PerishableProduct`** - Extends Product with expiry dates and conditional shipping
+- **`ShippableProduct`** - Extends Product with guaranteed shipping capabilities
+- **`Customer`** - Handles payment processing and balance management
+- **`Cart`** - Manages product selection and quantity validation
 
-#### `Product` (Base Class)
-- **Properties**: name, price, quantity
-- **Virtual Methods**: `isExpired()`, `isShippable()`, `getWeight()`
-- **Purpose**: Base class for all product types
+---
 
-#### `PerishableProduct` (Derived Class)
-- **Inherits**: Product
-- **Additional Properties**: expiry date, weight
-- **Features**: Expiration checking, conditional shipping based on weight
+## 🧪 Test Cases & Results
 
-#### `ShippableProduct` (Derived Class)
-- **Inherits**: Product
-- **Additional Properties**: weight
-- **Features**: Always shippable, weight-based shipping calculations
+### Test Case 1: Input Validation
+**Scenario:** Testing invalid product creation with zero price
 
-#### `Customer`
-- **Properties**: name, balance
-- **Methods**: payment processing, balance management
+```cpp
+try {
+    Product* apples = new Product("Apples", 0, 10);  // Invalid price (0)
+} catch(const invalid_argument& error) {
+    cerr << error.what() << '\n';
+}
+```
 
-#### `Cart`
-- **Features**: Add products, quantity validation, item management
+**Output:**
+```
+Price and quantity must be positive value
+```
 
-## 🛠️ Features
+---
 
-### Product Management
-- ✅ Different product types (perishable, shippable, digital)
-- ✅ Expiration date checking
-- ✅ Weight-based shipping calculations
-- ✅ Stock quantity management
+### Test Case 2: Successful Purchase with Mixed Products
+**Scenario:** Normal checkout with perishable, shippable, and digital products
 
-### Shopping Cart
-- ✅ Add products with quantity limits
-- ✅ Stock validation
-- ✅ Multi-product support
+```cpp
+Customer ahmed("Ahmed", 5000);
+Cart ahmedCart;
+ahmedCart.add(cheese, 2);      // Perishable: 400g each
+ahmedCart.add(tv, 3);          // Shippable: 7000g each  
+ahmedCart.add(scratchCard, 1); // Digital: no shipping
+checkout(ahmed, ahmedCart);
+```
 
-### Checkout Process
-- ✅ Subtotal calculation
-- ✅ Shipping fee calculation (10 units per kg)
-- ✅ Payment processing
-- ✅ Receipt generation
-- ✅ Inventory updates
+**Output:**
+```
+** Shipment Notice **
+2x Cheese    800g
+3x TV    21000g
+Total package weight: 21.8kg
+
+** Checkout Receipt **
+2x Cheese    200
+3x TV    1800
+1x ScratchCard    50
+----------------------
+Subtotal:     2050
+Shipping:     220
+Total Paid:   2270
+Remaining Balance: 2730
+```
+
+---
+
+### Test Case 3: Empty Cart Handling
+**Scenario:** Attempting checkout with an empty cart
+
+```cpp
+Customer mohamed("Mohamed", 10000);
+Cart mohamedCart;
+checkout(mohamed, mohamedCart);
+```
+
+**Output:**
+```
+Cart is empty!
+```
+
+---
+
+### Test Case 4: Insufficient Balance
+**Scenario:** Customer attempts purchase exceeding their balance
+
+```cpp
+Customer yasser("Yasser", 100);  // Low balance
+Cart yasserCart;
+yasserCart.add(biscuits, 2);     // Total cost: 300
+checkout(yasser, yasserCart);
+```
+
+**Output:**
+```
+Insufficient balance!
+```
+
+---
+
+### Test Case 5: Expired Product Detection
+**Scenario:** Attempting to purchase expired perishable products
+
+```cpp
+PerishableProduct* ships = new PerishableProduct("ships", 20, 5, createDate(2025, 1, 1));
+Customer anas("Anas", 10000);
+Cart anasCart;
+anasCart.add(ships, 5);
+checkout(anas, anasCart);
+```
+
+**Output:**
+```
+Item expired: ships
+```
+
+---
+
+### Test Case 6: Mixed Cart - Digital and Shippable
+**Scenario:** Purchase combining digital products (no shipping) with shippable items
+
+```cpp
+Customer yassen("Yassen", 10000);
+Cart yassenCart;
+yassenCart.add(scratchCard, 1);  // Digital product
+yassenCart.add(tv, 1);           // Shippable product
+checkout(yassen, yassenCart);
+```
+
+**Output:**
+```
+** Shipment Notice **
+1x TV    7000g
+Total package weight: 7.0kg
+
+** Checkout Receipt **
+1x ScratchCard    50
+1x TV    600
+----------------------
+Subtotal:     650
+Shipping:     70
+Total Paid:   720
+Remaining Balance: 9280
+```
+
+---
+
+## 📋 System Specifications
+
+### Product Types
+- **Digital Products** - No expiration, no shipping required
+- **Perishable Products** - Have expiry dates, conditional shipping based on weight
+- **Shippable Products** - Always require shipping, weight-based calculations
+
+### Shipping Rules
+- **Rate:** 10 units per kilogram
+- **Calculation:** Rounded up to nearest kilogram
+- **Scope:** Only applies to shippable products
 
 ### Error Handling
+- ✅ Invalid product parameters (price/quantity ≤ 0)
 - ✅ Empty cart detection
-- ✅ Insufficient balance warnings
-- ✅ Out of stock validation
+- ✅ Insufficient customer balance
 - ✅ Expired product filtering
+- ✅ Stock quantity validation
 
-## 📦 Example Usage
+---
+
+## 🛠️ Technical Implementation
+
+### Memory Management
+The system properly manages dynamic memory allocation with explicit cleanup:
+```cpp
+delete cheese;
+delete biscuits;
+delete tv;
+delete scratchCard;
+delete ships;
+```
+
+### Date Handling
+Uses standard C++ `tm` structure for expiration date management:
+```cpp
+tm createDate(int year, int month, int day) {
+    tm t = {};
+    t.tm_year = year - 1900;
+    t.tm_mon = month - 1;
+    t.tm_mday = day;
+    return t;
+}
+```
+
+### Polymorphism
+Virtual functions enable different behavior for product types:
+- `isExpired()` - Returns true only for expired perishable products
+- `isShippable()` - Determines shipping requirements
+- `getWeight()` - Calculates shipping weight
+
+---
+
+## 🎯 Usage Example
 
 ```cpp
 // Create products
@@ -72,116 +215,15 @@ ShippableProduct* tv = new ShippableProduct("TV", 600, 3, 7000);
 Product* scratchCard = new Product("ScratchCard", 50, 20);
 
 // Create customer and cart
-Customer ahmed("Ahmed", 5000);
-Cart ahmedCart;
+Customer customer("John", 2000);
+Cart cart;
 
 // Add items to cart
-ahmedCart.add(cheese, 2);
-ahmedCart.add(tv, 1);
-ahmedCart.add(scratchCard, 1);
+cart.add(cheese, 2);
+cart.add(tv, 1);
 
-// Checkout
-checkout(ahmed, ahmedCart);
+// Process checkout
+checkout(customer, cart);
 ```
 
-## 📋 Expected Output
-
-```
-** Shipment notice **
-2x Cheese 400g
-1x TV 7000g
-Total package weight 7.4kg
-
-** Checkout receipt **
-2x Cheese 200
-1x TV 600
-1x ScratchCard 50
-----------------------
-Subtotal 850
-Shipping 80
-Total Paid 930
-Remaining Balance: 4070
-```
-
-## 🔧 Compilation & Running
-
-### Prerequisites
-- C++11 or later
-- Standard C++ compiler (g++, clang++, MSVC)
-
-### Compilation
-```bash
-g++ -std=c++11 -o ecommerce main.cpp
-```
-
-### Running
-```bash
-./ecommerce
-```
-
-## 🧪 Test Cases
-
-The system includes comprehensive test scenarios:
-
-1. **Normal Purchase**: Multiple products with shipping
-2. **Empty Cart**: Error handling for empty checkout
-3. **Insufficient Balance**: Payment failure scenarios
-4. **Expired Products**: Automatic filtering of expired items
-5. **Stock Limitations**: Quantity validation
-
-## 🚨 Known Issues & Limitations
-
-### Critical Issues
-- ⚠️ **Memory Management**: Uses raw pointers, potential memory leaks
-- ⚠️ **Date Handling**: `const_cast` usage in date comparison
-- ⚠️ **Cart Logic**: No inventory reservation during cart operations
-
-### Suggested Improvements
-- Use smart pointers (`std::unique_ptr`, `std::shared_ptr`)
-- Implement proper exception handling
-- Add input validation
-- Use modern C++ features (auto, range-based loops)
-- Add unit tests
-
-## 🏆 Design Patterns Used
-
-- **Inheritance**: Product hierarchy with base and derived classes
-- **Polymorphism**: Virtual functions for different product behaviors
-- **Composition**: Cart contains CartItem objects
-- **Service Pattern**: ShippingService as standalone function
-
-## 📝 Code Quality Assessment
-
-### Strengths
-- ✅ Clear class hierarchy
-- ✅ Proper use of inheritance and polymorphism
-- ✅ Readable and well-structured code
-- ✅ Comprehensive feature coverage
-
-### Areas for Improvement
-- ❌ Memory management (raw pointers)
-- ❌ Error handling (limited exception use)
-- ❌ Input validation
-- ❌ Thread safety considerations
-
-## 🤝 Contributing
-
-This project was developed as part of the Fawry Rise Journey Full Stack Development Internship Challenge.
-
-### Development Guidelines
-1. Follow C++ best practices
-2. Add unit tests for new features
-3. Use modern C++ features when possible
-4. Maintain backward compatibility
-
-## 📄 License
-
-This project is developed for educational purposes as part of an internship challenge.
-
-## 📞 Contact
-
-For questions or suggestions regarding this implementation, please refer to the Fawry internship program documentation.
-
----
-
-**Note**: This implementation serves as a foundation for an e-commerce system and requires additional security, performance, and reliability improvements for production use.
+This system demonstrates object-oriented programming principles with real-world e-commerce functionality, complete error handling, and comprehensive test coverage.
